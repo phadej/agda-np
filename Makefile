@@ -7,7 +7,7 @@ OTHEROPTS = --auto-inline -Werror
 RTSARGS = +RTS -M6G -A128M -RTS ${OTHEROPTS}
 
 test: Everything.agda
-	agda ${RTSARGS} --safe -i. Everything.agda
+	agda ${RTSARGS} --safe --without-K -i. Everything.agda
 
 html: Everything.agda
 	agda ${RTSARGS} --html -i. Everything.agda

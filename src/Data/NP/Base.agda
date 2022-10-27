@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --without-K #-}
 -- Simpler version of Setoid Data.List.Relation.Unary.All
 module Data.NP.Base where
 
@@ -25,7 +25,7 @@ private
 
 infixr 5 _∷_
 
-data NP {A : Set a} (F : A → Set b) : List A → Set b where
+data NP {A : Set a} (F : A → Set b) : List A → Set (a ⊔ b) where
   []  : NP F []
   _∷_ : ∀ {x xs} → (fx : F x) → (fxs : NP F xs) → NP F (x ∷ xs)
 

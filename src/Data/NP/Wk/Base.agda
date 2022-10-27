@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --without-K #-}
 module Data.NP.Wk.Base where
 
 -- standard-library
@@ -21,12 +21,12 @@ private
 ------------------------------------------------------------------------
 -- Types
 
-data Wk₁ {A : Set a} : List A → List A → Set where
+data Wk₁ {A : Set a} : List A → List A → Set a where
   wk₁   : ∀ {x xs} →                Wk₁      xs  (x ∷ xs)
   keep₁ : ∀ {x xs ys} → Wk₁ xs ys → Wk₁ (x ∷ xs) (x ∷ ys)
   skip₁ : ∀ {x xs ys} → Wk₁ xs ys → Wk₁      xs  (x ∷ ys)
 
-data Wk {A : Set a} : List A → List A → Set where
+data Wk {A : Set a} : List A → List A → Set a where
   id : ∀ {xs} → Wk xs xs
   ne : ∀ {xs ys} → (δ : Wk₁ xs ys) → Wk xs ys
 

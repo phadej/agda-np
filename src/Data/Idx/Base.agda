@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --without-K #-}
 -- Simpler version of Data.List.Membership.Setoid
 module Data.Idx.Base where
 
@@ -19,7 +19,7 @@ private
 -- Types
 
 -- Index into a list
-data Idx {A : Set a} (x : A) : List A → Set where
+data Idx {A : Set a} (x : A) : List A → Set a where
   zero : ∀ {xs} → Idx x (x ∷ xs)
   suc  : ∀ {xs y} → Idx x xs → Idx x (y ∷ xs)
 
