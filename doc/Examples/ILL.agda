@@ -5,6 +5,8 @@ open import Data.Nat.Base using (ℕ)
 open import Data.List.Base using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import Data.Product using (_,_)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥)
 
 -- agda-np
 open import Data.List.Cover
@@ -89,3 +91,69 @@ sub-Tm' (lam t) env = lam (sub-Tm' t (snoc (cov₁ inrlⁿ) env var))
 
 sub-Tm : Env Tm Γ Δ → Tm Γ A → Tm Δ A
 sub-Tm env t = sub-Tm' t env
+
+------------------------------------------------------------------------
+-- Normal forms
+
+data Nf : Ctx → Ty → Set
+data Ne : Ctx → Ty → Set
+
+data Nf where
+  lamₙ : Nf (A ∷ Γ) B → Nf Γ (fun A B)
+  neu  : Ne Γ A → Nf Γ A
+
+data Ne where
+  pstₙ : ℕ → (A : Ty) → Ne Γ A
+  varₙ : Ne (A ∷ []) A
+  appₙ : Cover Γ Γ₁ Γ₂ → Ne Γ₁ (fun A B) → Nf Γ₂ A → Ne Γ B
+
+------------------------------------------------------------------------
+-- Semantic terms; values
+
+Val  : Ctx → Ty → Set
+Val₁ : Ctx → Ty → Set
+
+Val₁ Γ (bsc _)   = ⊥ -- no introduction terms for postulates
+Val₁ Γ (fun A B) = (Δ Ω : Ctx) → Cover Δ Γ Ω → Val Ω A → Val Δ B
+
+Val Γ A = Ne Γ A ⊎ Val₁ Γ A
+
+------------------------------------------------------------------------
+-- Evaluation
+
+EvalEnv = Env Val
+
+lower  : Val  Γ A → Nf Γ A
+lower₁ : Val₁ Γ A → Nf Γ A
+
+lower (inj₁ t) = neu t
+lower (inj₂ t) = lower₁ t
+
+lower₁ {A = bsc _} ()
+lower₁ {A = fun A B} f = lamₙ (lower (f (A ∷ _) (A ∷ []) (cov₁ inrlⁿ) (inj₁ varₙ)))
+
+app-val : Cover Γ Γ₁ Γ₂ → Val Γ₁ (fun A B) → Val Γ₂ A → Val Γ B
+app-val c (inj₁ f) t = inj₁ (appₙ c f (lower t))
+app-val c (inj₂ f) t = f _ _ c t
+
+eval' : Tm Γ A → EvalEnv Γ Δ → Val Δ A
+eval' (pst x A)   []             = inj₁ (pstₙ x A)
+eval' var         (snoc c [] t)
+  with inv-inrⁿ c
+... | refl                       = t
+eval' (app c f t) env
+  with splitEnv env c
+... | _ , _ , c' , env₁ , env₂   = app-val c' (eval' f env₁) (eval' t env₂)
+eval' (lam f)     env            = inj₂ λ Δ Ω c t → eval' f (snoc c env t)
+
+eval : EvalEnv Γ Δ → Tm Γ A → Val Δ A
+eval env t = eval' t env
+
+normalise-closed : Tm [] A → Nf [] A
+normalise-closed t = lower (eval [] t)
+
+_ : normalise-closed (id-Tm {A = A}) ≡ lamₙ (neu varₙ)
+_ = refl
+
+_ : normalise-closed (app nil (app nil (compose-Tm {B = B}) id-Tm) id-Tm) ≡ lamₙ (neu varₙ)
+_ = refl

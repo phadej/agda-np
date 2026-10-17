@@ -86,6 +86,12 @@ wk-Ne δ (appₙ f t) = appₙ (wk-Ne δ f) (wk-Nf δ t)
 -- * we avoid eta-expanding functions (which may or may not be desired) and
 -- * make lowering/quoting and raising/lifting between semantic values and normal/neutral forms NOT recursive.
 -- In fact, we don't need arbitrary lifting.
+--
+-- I think this is more closely resembles actual implementations (again in Haskell).
+-- There all constructors of Val and Val₁ are mushed together anyway
+-- and the evaluation **is not** eta-expanding.
+-- Instead we eta-expand in conversion checker, in other words only if needed.
+
 Val  : Ctx → Ty → Set
 Val₁ : Ctx → Ty → Set
 
@@ -119,7 +125,7 @@ EvalEnv = Env Val
 -- Note: here (in lower₁) and in eval env (lam t) we need to weaken contexts
 -- with (almost) identity weakening. This is the case where slightly
 -- more complicated Wk definition pays off.
-lower  : Val Γ A → Nf Γ A
+lower  : Val  Γ A → Nf Γ A
 lower₁ : Val₁ Γ A → Nf Γ A
 
 lower (inj₁ t) = neu t

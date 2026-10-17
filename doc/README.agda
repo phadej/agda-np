@@ -18,8 +18,8 @@ import Data.List.Cover
 ------------------------------------------------------------------------
 -- examples
 
--- normalisation-by-evaluation of simply typed lambda calculus
+-- normalisation-by-evaluation of simply typed lambda calculus.
 import Examples.STLC
 
--- linear logic using Cover
-import Example.ILL
+-- normalisation-by-evaluation of linear logic which uses Cover to split contexts.
+import Examples.ILL
