@@ -14,3 +14,9 @@ import Data.NP.Wk
 
 -- Cover xys xs ys is an evidence that xys is (order preserving) inteleaving of xs and ys.
 import Data.List.Cover
+
+------------------------------------------------------------------------
+-- examples
+
+-- normalisation-by-evaluation of simply typed lambda calculus
+import Examples.STLC
