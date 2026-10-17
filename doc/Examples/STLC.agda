@@ -5,6 +5,7 @@ open import Data.Nat.Base using (ℕ)
 open import Data.List.Base using (List; []; _∷_)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
 open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 -- agda-np
 open import Data.Idx using (Idx; zero; suc)
@@ -23,7 +24,7 @@ Ctx = List Ty
 
 private
   variable
-    A B : Ty
+    A B C : Ty
     Γ Δ : Ctx
 
 ------------------------------------------------------------------------
@@ -34,6 +35,19 @@ data Tm : Ctx → Ty → Set where
   var : Idx A Γ → Tm Γ A                   -- variables
   app : Tm Γ (fun A B) → Tm Γ A → Tm Γ B   -- function application / elimination
   lam : Tm (A ∷ Γ) B → Tm Γ (fun A B)      -- function introduction
+
+private
+  _~>_ = fun
+  infixr 4 _~>_
+
+id-Tm : Tm [] (A ~> A)
+id-Tm = lam (var zero)
+
+flip-Tm : Tm [] ((A ~> B ~> C) ~> (B ~> A ~> C))
+flip-Tm = lam (lam (lam (app (app (var (suc (suc zero))) (var zero)) (var (suc zero)))))
+
+compose-Tm : Tm [] ((B ~> C) ~> (A ~> B) ~> (A ~> C))
+compose-Tm = lam (lam (lam (app (var (suc (suc zero))) (app (var (suc zero)) (var zero)))))
 
 ------------------------------------------------------------------------
 -- Normal forms
@@ -127,6 +141,12 @@ eval env (lam t)   = inj₂ λ Δ δ x → eval (x ∷ mapNP (wk-Val δ) env) t
 
 normalise-closed : Tm [] A → Nf [] A
 normalise-closed t = lower (eval [] t)
+
+_ : normalise-closed (id-Tm {A = A}) ≡ lamₙ (neu (varₙ zero))
+_ = refl
+
+_ : normalise-closed (app (app (compose-Tm {B = B}) id-Tm) id-Tm) ≡ lamₙ (neu (varₙ zero))
+_ = refl
 
 ------------------------------------------------------------------------
 -- Substition (for comparison purposes)

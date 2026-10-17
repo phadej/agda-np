@@ -28,12 +28,29 @@ data Cover₁ {A : Set a} : List A → List A → List A → Set a where
   inl₁  : ∀ {x xys xs ys} → Cover₁ xys xs ys → Cover₁ (x ∷ xys) (x ∷ xs)     ys
   inr₁  : ∀ {y xys xs ys} → Cover₁ xys xs ys → Cover₁ (y ∷ xys)      xs (y ∷ ys)
 
+-- Inspired by
+--
+-- @article{McBride_2018,
+--    title={Everybody’s Got To Be Somewhere},
+--    volume={275},
+--    ISSN={2075-2180},
+--    url={http://dx.doi.org/10.4204/EPTCS.275.6},
+--    DOI={10.4204/eptcs.275.6},
+--    journal={Electronic Proceedings in Theoretical Computer Science},
+--    publisher={Open Publishing Association},
+--    author={McBride, Conor},
+--    year={2018},
+--    month=July, pages={53–69} }
+--
 data Cover {A : Set a} : List A → List A → List A → Set a where
   inlⁿ : ∀ {xs}                           → Cover xs  xs []
   cov₁ : ∀ {xys xs ys} → Cover₁ xys xs ys → Cover xys xs ys
 
 ------------------------------------------------------------------------
 -- Basic operations
+
+nil : Cover {A = A} [] [] []
+nil = inlⁿ
 
 inl : Cover xys xs ys → Cover (x ∷ xys) (x ∷ xs) ys
 inl inlⁿ     = inlⁿ

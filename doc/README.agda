@@ -20,3 +20,6 @@ import Data.List.Cover
 
 -- normalisation-by-evaluation of simply typed lambda calculus
 import Examples.STLC
+
+-- linear logic using Cover
+import Example.ILL
