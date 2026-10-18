@@ -18,7 +18,7 @@ private
     G : A → Set c
 
     x y : A
-    xs ys zs xys xyzs : List A
+    xs ys zs xys yzs xzs xyzs : List A
 
 ------------------------------------------------------------------------
 -- Types
@@ -107,24 +107,48 @@ assoc₁ (inl₁ c₁) (inr₁ c₂) with assoc₁ c₁ c₂
 assoc
    : Cover xyzs xys zs → Cover xys xs ys
    → ∃ λ yzs → Cover xyzs xs yzs × Cover yzs ys zs
-assoc           inlⁿ      c₂       = _  , c₂      , inlⁿ
-assoc {zs = zs} (cov₁ c₁) inlⁿ     = zs , cov₁ c₁ , cov₁ (inrⁿ₁ c₁)
-assoc           (cov₁ c₁) (cov₁ c₂) with assoc₁ c₁ c₂
+assoc inlⁿ      c₂    = _ , c₂ , inlⁿ
+assoc (cov₁ c₁) inlⁿ  = _ , cov₁ c₁ , cov₁ (inrⁿ₁ c₁)
+assoc (cov₁ c₁) (cov₁ c₂) with assoc₁ c₁ c₂
 ... | yzs , c₁' , c₂' = yzs , cov₁ c₁' , cov₁ c₂'
 
--- However it is impossible?
--- to define
+-- xs <> (ys <> zs) = (xs <> ys) <> zs
+unassoc₁
+  : Cover₁ xyzs xs yzs → Cover₁ yzs ys zs
+  → ∃ λ xys → Cover₁ xyzs xys zs × Cover xys xs ys
+unassoc₁ inrlⁿ inrlⁿ = _ , inrlⁿ , inlⁿ
+unassoc₁ (inl₁ c₁) c₂ with unassoc₁ c₁ c₂
+... | xys' , c₁' , c₂' = _ ∷ xys' , inl₁ c₁' , inl c₂'
+unassoc₁ (inr₁ c₁) inrlⁿ = _ , inrlⁿ , cov₁ c₁
+unassoc₁ (inr₁ c₁) (inl₁ c₂) with unassoc₁ c₁ c₂
+... | xys' , c₁' , c₂' = _ ∷ xys' , inl₁ c₁' , inr c₂'
+unassoc₁ (inr₁ c₁) (inr₁ c₂) with unassoc₁ c₁ c₂
+... | xys' , c₁' , c₂' = xys' , inr₁ c₁' , c₂'
+
+-- xs <> (ys <> zs) = (xs <> ys) <> zs
+unassoc
+  : Cover xyzs xs yzs → Cover yzs ys zs
+  → ∃ λ xys → Cover xyzs xys zs × Cover xys xs ys
+unassoc inlⁿ      inlⁿ  = _ , inlⁿ , inlⁿ
+unassoc (cov₁ c₁) inlⁿ  = _ , inlⁿ , cov₁ c₁
+unassoc (cov₁ c₁) (cov₁ c₂) with unassoc₁ c₁ c₂
+... | xys' , c₁' , c₂' = xys' , cov₁ c₁' , c₂'
+
+-- However it is impossible (?) to define
 --
 -- comm : Cover xys xs ys → Cover xys ys xs
 --
 -- without pattern matching on xys (or ys)
 --
--- comm inlⁿ = ?
+-- comm inlⁿ = inrⁿ -- would match on the index list
 --
 -- Yet, the situation is not all that bad.
 -- Some combinations of assoc and comm
 -- are still definable without pattern matching
--- on the indices (i.e. keeping them erasable).
+-- on the indices (i.e. keeping them erasable)
+-- when there is extra data, e.g. another
+-- cover with matching indices.
+-- (See assoc for an example of that).
 --
 -- There 6 ways to permute three arguments
 -- which are listed below
@@ -136,21 +160,22 @@ assoc           (cov₁ c₁) (cov₁ c₂) with assoc₁ c₁ c₂
 --             zs xs ys  -- (3, 1, 2)
 --             zs ys xs  -- (3, 2, 1)
 --
--- See e.g. https://en.wikipedia.org/wiki/Permutation
+-- See https://en.wikipedia.org/wiki/Permutation
 --
 -- and we can reassociate (xs <> ys) <> zs, or not.
 --
 -- So there are twelve potential functions
--- (assoc being one).
+-- (assoc and unassoc being two).
 --
 -- I only needed one additional one, so I only defined it.
+-- (I'm not sure all are definable without pattern matching on indices).
 -- The naming scheme is hopefully self-explanatory.
---
+
 -- (xs <> ys) <> zs  -> (xs <> zs) <> ys
 permute-132₁
    : Cover₁ xyzs xys zs → Cover₁ xys xs ys
    → ∃ λ xzs → Cover₁ xyzs xzs ys × Cover₁ xzs xs zs
-permute-132₁ inrlⁿ c₂ = _ ∷ _ , inl₁ c₂ , inrlⁿ
+permute-132₁ inrlⁿ     c₂ = _ ∷ _ , inl₁ c₂ , inrlⁿ
 permute-132₁ (inr₁ c₁) c₂ with permute-132₁ c₁ c₂
 ... | xzs' , c₁' , c₂' = _ ∷ xzs' , inl₁ c₁' , inr₁ c₂'
 permute-132₁ (inl₁ c₁) inrlⁿ = _ , inrlⁿ , c₁
@@ -163,7 +188,7 @@ permute-132₁ (inl₁ c₁) (inr₁ c₂) with permute-132₁ c₁ c₂
 permute-132
    : Cover xyzs xys zs → Cover xys xs ys
    → ∃ λ xzs → Cover xyzs xzs ys × Cover xzs xs zs
-permute-132 inlⁿ xys=xs+ys = _ , xys=xs+ys , inlⁿ
+permute-132 inlⁿ      c₂   = _ , c₂ , inlⁿ
 permute-132 (cov₁ c₁) inlⁿ = _ , inlⁿ , cov₁ c₁
 permute-132 (cov₁ c₁) (cov₁ c₂) with permute-132₁ c₁ c₂
 ... | xzs' , c₁' , c₂' = xzs' , cov₁ c₁' , cov₁ c₂'
