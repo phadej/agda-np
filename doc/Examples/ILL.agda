@@ -132,12 +132,15 @@ lower (inj₂ t) = lower₁ t
 lower₁ {A = bsc _} ()
 lower₁ {A = fun A B} f = lamₙ (lower (f (A ∷ _) (A ∷ []) (cov₁ inrlⁿ) (inj₁ varₙ)))
 
+raise : Ne Γ A → Val Γ A
+raise = inj₁
+
 app-val : Cover Γ Γ₁ Γ₂ → Val Γ₁ (fun A B) → Val Γ₂ A → Val Γ B
 app-val c (inj₁ f) t = inj₁ (appₙ c f (lower t))
 app-val c (inj₂ f) t = f _ _ c t
 
 eval' : Tm Γ A → EvalEnv Γ Δ → Val Δ A
-eval' (pst x A)   []             = inj₁ (pstₙ x A)
+eval' (pst x A)   []             = raise (pstₙ x A)
 eval' var         (snoc c [] t)
   with inv-inrⁿ c
 ... | refl                       = t
