@@ -87,6 +87,9 @@ split (cov₁ c) xys = split₁ c xys
 
 -- reassocication of covers
 
+-- Cover is kind of associative and commutative
+-- the assoc is defined below.
+
 -- (xs <> ys) <> zs = xs <> (ys <> zs)
 assoc₁
   : Cover₁ xyzs xys zs → Cover₁ xys xs ys
@@ -109,46 +112,58 @@ assoc {zs = zs} (cov₁ c₁) inlⁿ     = zs , cov₁ c₁ , cov₁ (inrⁿ₁ 
 assoc           (cov₁ c₁) (cov₁ c₂) with assoc₁ c₁ c₂
 ... | yzs , c₁' , c₂' = yzs , cov₁ c₁' , cov₁ c₂'
 
+-- However it is impossible?
+-- to define
+--
+-- comm : Cover xys xs ys → Cover xys ys xs
+--
+-- without pattern matching on xys (or ys)
+--
+-- comm inlⁿ = ?
+--
+-- Yet, the situation is not all that bad.
+-- Some combinations of assoc and comm
+-- are still definable without pattern matching
+-- on the indices (i.e. keeping them erasable).
+--
+-- There 6 ways to permute three arguments
+-- which are listed below
+--
+-- xs ys zs -> xs ys zs  -- (1, 2, 3)
+--             xs zs ys  -- (1, 3, 2)
+--             ys xs zs  -- (2, 1, 3)
+--             ys zs xs  -- (2, 3, 1)
+--             zs xs ys  -- (3, 1, 2)
+--             zs ys xs  -- (3, 2, 1)
+--
+-- See e.g. https://en.wikipedia.org/wiki/Permutation
+--
+-- and we can reassociate (xs <> ys) <> zs, or not.
+--
+-- So there are twelve potential functions
+-- (assoc being one).
+--
+-- I only needed one additional one, so I only defined it.
+-- The naming scheme is hopefully self-explanatory.
+--
 -- (xs <> ys) <> zs  -> (xs <> zs) <> ys
-assoc-a₁
+permute-132₁
    : Cover₁ xyzs xys zs → Cover₁ xys xs ys
    → ∃ λ xzs → Cover₁ xyzs xzs ys × Cover₁ xzs xs zs
-assoc-a₁ inrlⁿ c₂ = _ ∷ _ , inl₁ c₂ , inrlⁿ
-assoc-a₁ (inr₁ c₁) c₂ with assoc-a₁ c₁ c₂
+permute-132₁ inrlⁿ c₂ = _ ∷ _ , inl₁ c₂ , inrlⁿ
+permute-132₁ (inr₁ c₁) c₂ with permute-132₁ c₁ c₂
 ... | xzs' , c₁' , c₂' = _ ∷ xzs' , inl₁ c₁' , inr₁ c₂'
-assoc-a₁ (inl₁ c₁) inrlⁿ = _ , inrlⁿ , c₁
-assoc-a₁ (inl₁ c₁) (inl₁ c₂) with assoc-a₁ c₁ c₂
+permute-132₁ (inl₁ c₁) inrlⁿ = _ , inrlⁿ , c₁
+permute-132₁ (inl₁ c₁) (inl₁ c₂) with permute-132₁ c₁ c₂
 ... | xzs' , c₁' , c₂' = _ ∷ xzs' , inl₁ c₁' , inl₁ c₂'
-assoc-a₁ (inl₁ c₁) (inr₁ c₂) with assoc-a₁ c₁ c₂
+permute-132₁ (inl₁ c₁) (inr₁ c₂) with permute-132₁ c₁ c₂
 ... | xzs' , c₁' , c₂' = xzs' , inr₁ c₁' , c₂'
 
 -- (xs <> ys) <> zs  -> (xs <> zs) <> ys
-assoc-a
+permute-132
    : Cover xyzs xys zs → Cover xys xs ys
    → ∃ λ xzs → Cover xyzs xzs ys × Cover xzs xs zs
-assoc-a inlⁿ xys=xs+ys = _ , xys=xs+ys , inlⁿ
-assoc-a (cov₁ c₁) inlⁿ = _ , inlⁿ , cov₁ c₁
-assoc-a (cov₁ c₁) (cov₁ c₂) with assoc-a₁ c₁ c₂
+permute-132 inlⁿ xys=xs+ys = _ , xys=xs+ys , inlⁿ
+permute-132 (cov₁ c₁) inlⁿ = _ , inlⁿ , cov₁ c₁
+permute-132 (cov₁ c₁) (cov₁ c₂) with permute-132₁ c₁ c₂
 ... | xzs' , c₁' , c₂' = xzs' , cov₁ c₁' , cov₁ c₂'
-
--- (xs <> ys) <> zs -> xs <> (ys <> zs)
-assoc-b₁
-   : Cover₁ xyzs xys zs → Cover₁ xys xs ys
-   → ∃ λ yzs → Cover₁ xyzs xs yzs × Cover₁ yzs ys zs
-assoc-b₁ inrlⁿ c₂ = _ ∷ _ , inr₁ c₂ , inrlⁿ
-assoc-b₁ (inr₁ c₁) c₂ with assoc-b₁ c₁ c₂
-... | yzs , c₁' , c₂' = _ ∷ yzs , inr₁ c₁' , inr₁ c₂'
-assoc-b₁ {zs = zs} (inl₁ c₁) inrlⁿ = _ ∷ zs , inr₁ c₁ , inl₁ (inrⁿ₁ c₁)
-assoc-b₁ (inl₁ c₁) (inl₁ c₂) with assoc-b₁ c₁ c₂
-... | yzs , c₁' , c₂' = yzs , inl₁ c₁' , c₂'
-assoc-b₁ (inl₁ c₁) (inr₁ c₂) with assoc-b₁ c₁ c₂
-... | yzs , c₁' , c₂' = _ ∷ yzs , inr₁ c₁' , inl₁ c₂'
-
--- (xs <> ys) <> zs -> xs <> (ys <> zs)
-assoc-b
-   : Cover xyzs xys zs → Cover xys xs ys
-   → ∃ λ yzs → Cover xyzs xs yzs × Cover yzs ys zs
-assoc-b           inlⁿ      c₂         = _  , c₂      , inlⁿ
-assoc-b {zs = zs} (cov₁ c₁) inlⁿ       = zs , cov₁ c₁ , cov₁ (inrⁿ₁ c₁)
-assoc-b           (cov₁ c₁) (cov₁ c₂) with assoc-b₁ c₁ c₂
-... | yzs , c₁' , c₂' = yzs , cov₁ c₁' , cov₁ c₂'

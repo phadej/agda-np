@@ -26,10 +26,10 @@ splitEnv₁
   → ∃₂ λ xs' ys' → Cover xys' xs' ys' × Env F xs xs' × Env F ys ys'
 splitEnv₁ (snoc c₁ env t) inrlⁿ = _ , _ , c₁ , env , snoc (inrⁿ c₁) [] t
 splitEnv₁ (snoc c₁ env t) (inl₁ c₂) with splitEnv₁ env c₂
-... | xs' , ys' , c₃ , env₁ , env₂ with assoc-a c₁ c₃
+... | xs' , ys' , c₃ , env₁ , env₂ with permute-132 c₁ c₃
 ... | xzs' , c₄ , c₅ = xzs' , ys' , c₄ , snoc c₅ env₁ t , env₂
 splitEnv₁ (snoc c₁ env t) (inr₁ c₂) with splitEnv₁ env c₂
-... | xs' , ys' , c₃ , env₁ , env₂ with assoc-b c₁ c₃
+... | xs' , ys' , c₃ , env₁ , env₂ with assoc c₁ c₃
 ... | yzs , c₄ , c₅  = xs' , yzs , c₄ , env₁ , snoc c₅ env₂ t
 
 splitEnv
