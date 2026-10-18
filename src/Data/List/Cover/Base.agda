@@ -56,9 +56,12 @@ inl : Cover xys xs ys → Cover (x ∷ xys) (x ∷ xs) ys
 inl inlⁿ     = inlⁿ
 inl (cov₁ c) = cov₁ (inl₁ c)
 
+inr' : Cover xys xs ys → Cover₁ (y ∷ xys) xs (y ∷ ys)
+inr' inlⁿ     = inrlⁿ
+inr' (cov₁ c) = inr₁ c
+
 inr : Cover xys xs ys → Cover (y ∷ xys) xs (y ∷ ys)
-inr inlⁿ     = cov₁ inrlⁿ
-inr (cov₁ c) = cov₁ (inr₁ c)
+inr c = cov₁ (inr' c)
 
 inrⁿ₁ : Cover₁ xys xs ys → Cover₁ ys [] ys
 inrⁿ₁ inrlⁿ    = inrlⁿ
