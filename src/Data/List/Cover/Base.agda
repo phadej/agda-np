@@ -8,6 +8,7 @@ open import Data.Product.Base using (Σ; _,_; _×_; ∃)
 
 -- agda-np
 open import Data.NP.Base using (NP; []; _∷_)
+open import Data.NP.Wk.Base using (Wk; id; ne; Wk₁; wk₁; keep₁; skip₁)
 
 private
   variable
@@ -74,6 +75,19 @@ inrⁿ₁ (inr₁ c) = inr₁ (inrⁿ₁ c)
 inrⁿ : Cover xys xs ys → Cover ys [] ys
 inrⁿ inlⁿ     = inlⁿ
 inrⁿ (cov₁ c) = cov₁ (inrⁿ₁ c)
+
+-- Converting to Wk
+
+cover-wk₁₁ : Cover₁ xys xs ys → Wk₁ xs xys
+cover-wk₁₁ inrlⁿ    = wk₁
+cover-wk₁₁ (inl₁ c) = keep₁ (cover-wk₁₁ c)
+cover-wk₁₁ (inr₁ c) = skip₁ (cover-wk₁₁ c)
+
+cover-wk₁ : Cover xys xs ys → Wk xs xys
+cover-wk₁ inlⁿ     = id
+cover-wk₁ (cov₁ c) = ne (cover-wk₁₁ c)
+
+-- cover­wk₂ needs to construct Wk [] ys out of a thin air
 
 -- Splitting NP
 
