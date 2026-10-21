@@ -4,11 +4,11 @@ module Data.List.Cover.Base where
 -- standard-library
 open import Data.List.Base as L using (List; []; _∷_)
 open import Level using (Level; _⊔_)
-open import Data.Product.Base using (Σ; _,_; _×_; ∃)
+open import Data.Product.Base using (Σ; _,_; _×_; ∃; ∃₂)
 
 -- agda-np
 open import Data.NP.Base using (NP; []; _∷_)
-open import Data.NP.Wk.Base using (Wk; id; ne; Wk₁; wk₁; keep₁; skip₁)
+open import Data.NP.Wk.Base using (Wk; id; ne; keep; skip; Wk₁; wk₁; keep₁; skip₁)
 
 private
   variable
@@ -20,6 +20,7 @@ private
 
     x y : A
     xs ys zs xys yzs xzs xyzs : List A
+    xs' ys' xys' : List A
 
 ------------------------------------------------------------------------
 -- Types
@@ -76,6 +77,34 @@ inrⁿ : Cover xys xs ys → Cover ys [] ys
 inrⁿ inlⁿ     = inlⁿ
 inrⁿ (cov₁ c) = cov₁ (inrⁿ₁ c)
 
+------------------------------------------------------------------------
+-- Composition with Wk
+
+wk⨟cover₁
+  : Wk₁ xys' xys → Cover₁ xys xs ys
+  → ∃₂ λ xs' ys' → Wk xs' xs × Wk ys' ys × Cover xys' xs' ys'
+wk⨟cover₁ wk₁       inrlⁿ      = _       , []      , id , ne wk₁ , inlⁿ
+wk⨟cover₁ (keep₁ δ) inrlⁿ      = _       , _ ∷ []  , ne δ , id , cov₁ inrlⁿ
+wk⨟cover₁ (skip₁ δ) inrlⁿ      = _       , []      , ne δ , ne wk₁ , inlⁿ
+wk⨟cover₁ wk₁       (inl₁ c)   = _       , _       , ne wk₁ , id , cov₁ c
+wk⨟cover₁ (keep₁ δ) (inl₁ c) with wk⨟cover₁ δ c
+... | xs' , ys' , δ₁ , δ₂ , c' = _ ∷ xs' , ys'     , keep δ₁ , δ₂ , inl c'
+wk⨟cover₁ (skip₁ δ) (inl₁ c) with wk⨟cover₁ δ c
+... | xs' , ys' , δ₁ , δ₂ , c' = xs'     , ys'     , skip δ₁ , δ₂ , c'
+wk⨟cover₁ wk₁       (inr₁ c)   = _       , _       , id , ne wk₁ , cov₁ c
+wk⨟cover₁ (keep₁ δ) (inr₁ c) with wk⨟cover₁ δ c
+... | xs' , ys' , δ₁ , δ₂ , c' = xs'     , _ ∷ ys' , δ₁ , keep δ₂ , inr c'
+wk⨟cover₁ (skip₁ δ) (inr₁ c) with wk⨟cover₁ δ c
+... | xs' , ys' , δ₁ , δ₂ , c' = xs'     , ys'      , δ₁ , skip δ₂ , c'
+
+wk⨟cover
+  : Wk xys' xys → Cover xys xs ys
+  → ∃₂ λ xs' ys' → Wk xs' xs × Wk ys' ys × Cover xys' xs' ys'
+wk⨟cover id     c        = _ , _  , id   , id , c
+wk⨟cover (ne δ) inlⁿ     = _ , [] , ne δ , id , inlⁿ
+wk⨟cover (ne δ) (cov₁ c) = wk⨟cover₁ δ c
+
+------------------------------------------------------------------------
 -- Converting to Wk
 
 cover-wk₁₁ : Cover₁ xys xs ys → Wk₁ xs xys
@@ -89,6 +118,7 @@ cover-wk₁ (cov₁ c) = ne (cover-wk₁₁ c)
 
 -- cover­wk₂ needs to construct Wk [] ys out of a thin air
 
+------------------------------------------------------------------------
 -- Splitting NP
 
 split₁ : Cover₁ xys xs ys → NP F xys → NP F xs × NP F ys
@@ -102,7 +132,7 @@ split : Cover xys xs ys → NP F xys → NP F xs × NP F ys
 split inlⁿ     xys = xys , []
 split (cov₁ c) xys = split₁ c xys
 
--- reassocication of covers
+-- Reassocication of covers
 
 -- Cover is kind of associative and commutative
 -- the assoc is defined below.
