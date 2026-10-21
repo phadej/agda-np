@@ -8,7 +8,7 @@ open import Data.Product.Base using (Σ; _,_; _×_; ∃; ∃₂)
 
 -- agda-np
 open import Data.NP.Base using (NP; []; _∷_)
-open import Data.NP.Wk.Base using (Wk; id; ne; keep; skip; Wk₁; wk₁; keep₁; skip₁)
+open import Data.NP.Wk.Base using (Wk; id; ne; keep; skip; Wk₁; wk₁; keep₁; skip₁; _⨟_)
 
 private
   variable
@@ -103,6 +103,42 @@ wk⨟cover
 wk⨟cover id     c        = _ , _  , id   , id , c
 wk⨟cover (ne δ) inlⁿ     = _ , [] , ne δ , id , inlⁿ
 wk⨟cover (ne δ) (cov₁ c) = wk⨟cover₁ δ c
+
+cover⨟wk₂' : Cover₁ xys xs ys → Wk₁ ys' ys → ∃ λ xys' → Cover xys' xs ys' × Wk₁ xys' xys
+cover⨟wk₂' inrlⁿ wk₁ = _ , inlⁿ , wk₁
+cover⨟wk₂' (inl₁ c) δ with cover⨟wk₂' c δ
+... | Δ , c' , δ' = _ ∷ Δ , inl c' , keep₁ δ'
+cover⨟wk₂' (inr₁ c) wk₁ = _ , cov₁ c , wk₁
+cover⨟wk₂' (inr₁ c) (keep₁ δ) with cover⨟wk₂' c δ
+... | Δ , c' , δ' = _ ∷ Δ , inr c' , keep₁ δ'
+cover⨟wk₂' (inr₁ c) (skip₁ δ) with cover⨟wk₂' c δ
+... | Δ , c' , δ' = Δ , c' , skip₁ δ'
+
+cover⨟wk₂ : Cover xys xs ys → Wk ys' ys → ∃ λ xys' → Cover xys' xs ys' × Wk xys' xys
+cover⨟wk₂ c id = _ , c , id
+cover⨟wk₂ (cov₁ c) (ne δ) with cover⨟wk₂' c δ
+... | Δ , c' , δ' = Δ , c' , ne δ'
+
+cover⨟wk₁' : Cover₁ xys xs ys → Wk₁ xs' xs → ∃ λ xys' → Cover₁ xys' xs' ys × Wk₁ xys' xys
+cover⨟wk₁' inrlⁿ δ = _ ∷ _ , inrlⁿ , keep₁ δ
+cover⨟wk₁' (inr₁ c) δ with cover⨟wk₁' c δ
+... | Δ , c' , δ' = _ ∷ Δ , inr₁ c' , keep₁ δ'
+cover⨟wk₁' (inl₁ c) wk₁ = _ , c , wk₁
+cover⨟wk₁' (inl₁ c) (keep₁ δ) with cover⨟wk₁' c δ
+... | Δ , c' , δ' = _ ∷ Δ , inl₁ c' , keep₁ δ'
+cover⨟wk₁' (inl₁ c) (skip₁ δ) with cover⨟wk₁' c δ
+... | Δ , c' , δ' = Δ , c' , skip₁ δ'
+
+cover⨟wk₁ : Cover xys xs ys → Wk xs' xs → ∃ λ xys' → Cover xys' xs' ys × Wk xys' xys
+cover⨟wk₁ c id = _ , c , id
+cover⨟wk₁ inlⁿ (ne δ) = _ , inlⁿ , ne δ
+cover⨟wk₁ (cov₁ x) (ne δ) with cover⨟wk₁' x δ
+... | Δ , c' , δ' = Δ , cov₁ c' , ne δ'
+
+cover⨟wk : Cover xys xs ys → Wk xs' xs → Wk ys' ys → ∃ λ xys' → Cover xys' xs' ys' × Wk xys' xys
+cover⨟wk c δ₁ δ₂ with cover⨟wk₁ c δ₁
+... | _    , c'  , δ' with cover⨟wk₂ c' δ₂
+... | xys' , c'' , δ'' = xys' , c'' , δ'' ⨟ δ'
 
 ------------------------------------------------------------------------
 -- Converting to Wk
