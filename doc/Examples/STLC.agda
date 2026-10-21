@@ -37,17 +37,32 @@ data Tm : Ctx → Ty → Set where
   lam : Tm (A ∷ Γ) B → Tm Γ (fun A B)      -- function introduction
 
 private
-  _~>_ = fun
+  _~>_ : Ty → Ty → Ty
+  A ~> B = fun A B
   infixr 4 _~>_
 
+  _$_ : Tm Γ (A ~> B) → Tm Γ A → Tm Γ B
+  f $ x = app f x
+  infixl 0 _$_
+
+  pattern var₀ = var zero
+  pattern var₁ = var (suc zero)
+  pattern var₂ = var (suc (suc zero))
+
 id-Tm : Tm [] (A ~> A)
-id-Tm = lam (var zero)
+id-Tm = lam var₀
 
 flip-Tm : Tm [] ((A ~> B ~> C) ~> (B ~> A ~> C))
-flip-Tm = lam (lam (lam (app (app (var (suc (suc zero))) (var zero)) (var (suc zero)))))
+flip-Tm = lam (lam (lam (var₂ $ var₀ $ var₁)))
 
 compose-Tm : Tm [] ((B ~> C) ~> (A ~> B) ~> (A ~> C))
-compose-Tm = lam (lam (lam (app (var (suc (suc zero))) (app (var (suc zero)) (var zero)))))
+compose-Tm = lam (lam (lam (app var₂ (app var₁ var₀))))
+
+const-Tm : Tm [] (A ~> B ~> A)
+const-Tm = lam (lam var₁)
+
+w-Tm : Tm [] ((A ~> A ~> B) ~> (A ~> B))
+w-Tm = lam (lam (var₁ $ var₀ $ var₀))
 
 ------------------------------------------------------------------------
 -- Normal forms
@@ -171,7 +186,10 @@ normalise-closed t = lower (eval [] t)
 _ : normalise-closed (id-Tm {A = A}) ≡ lamₙ (neu (varₙ zero))
 _ = refl
 
-_ : normalise-closed (app (app (compose-Tm {B = B}) id-Tm) id-Tm) ≡ lamₙ (neu (varₙ zero))
+_ : normalise-closed (compose-Tm {B = B} $ id-Tm $ id-Tm) ≡ lamₙ (neu (varₙ zero))
+_ = refl
+
+_ : normalise-closed (compose-Tm $ const-Tm {B = B} $ const-Tm {A = A} {B = C}) ≡ lamₙ (lamₙ (lamₙ (neu (varₙ (suc (suc zero))))))
 _ = refl
 
 ------------------------------------------------------------------------
