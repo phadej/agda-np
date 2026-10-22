@@ -48,16 +48,20 @@ data Tm : Ctx → Ty → Set where
   lam : Tm (A ∷ Γ) B → Tm Γ (fun A B)
 
   -- weakening of the context
-  wkn : Wk Γ Δ → Tm Γ A → Tm Δ A
+  wkn : Wk₁ Γ Δ → Tm Γ A → Tm Δ A
 
 -- Note: unlike STLC, this encoding of ILL terms *dictates* the context.
 -- i.e. context is determined by the term.
 --
 
+wk-Tm : Wk Γ Δ → Tm Γ A → Tm Δ A
+wk-Tm id     t = t
+wk-Tm (ne δ) t = wkn δ t
+
 -- konst i.e. constant function application
 -- can be defined used wkd
 konst : Cover Γ Γ₁ Γ₂ → Tm Γ₁ A → Tm Γ₂ B → Tm Γ A
-konst c x _ = wkn (cover-wk₁ c) x
+konst c x _ = wk-Tm (cover-wk₁ c) x
 
 -- we could also have konst as a primitive and define
 -- wkd as a combinator, but that way is messier:
@@ -71,7 +75,7 @@ konst c x _ = wkn (cover-wk₁ c) x
 -- We could choose either lak or konst as a primitive,
 -- but direct weakening with wkn is the simplest one.
 lak : Tm Γ B → Tm Γ (fun A B)
-lak t = lam (wkn wk t)
+lak t = lam (wkn wk₁ t)
 
 private
   _~>_ = fun
@@ -114,8 +118,8 @@ sub-Tm' var (snoc c [] t) with inv-inrⁿ c
 sub-Tm' (app c f t) env with splitEnv env c
 ... | _ , _ , c' , env₁ , env₂ = app c' (sub-Tm' f env₁) (sub-Tm' t env₂)
 sub-Tm' (lam t) env = lam (sub-Tm' t (snoc (cov₁ inrlⁿ) env var))
-sub-Tm' (wkn δ t) env with wk-env δ env
-... | _ , δ' , env' = wkn δ' (sub-Tm' t env')
+sub-Tm' (wkn δ t) env with wk₁-env δ env
+... | _ , δ' , env' = wk-Tm δ' (sub-Tm' t env')
 
 sub-Tm : Env Tm Γ Δ → Tm Γ A → Tm Δ A
 sub-Tm env t = sub-Tm' t env
@@ -222,7 +226,7 @@ app-val c (weakened δ₁ f) (weakened δ₂ t) with cover⨟wk c δ₁ δ₂
 
 eval' : Tm Γ A → EvalEnv Γ Δ → Val Δ A
 eval' (pst x A)   []             = weakened id (raise (pstₙ x A))
-eval' (wkn δ t)   env with wk-env δ env
+eval' (wkn δ t)   env with wk₁-env δ env
 ... | _ , δ' , env' = wk-Val δ' (eval' t env')
 eval' var         (snoc c [] t)
   with inv-inrⁿ c
